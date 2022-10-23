@@ -1,0 +1,39 @@
+stages:
+  preprocess_data:
+    cmd: python src/data/make_dataset.py 'data/raw/train.csv' 'data/interim/train.pkl'
+      'data/processed/target.pkl'; python src/data/make_dataset.py 'data/raw/test.csv'
+      'data/interim/test.pkl' '.'
+    deps:
+    - data/raw
+    outs:
+    - data/interim
+  features_data:
+    cmd: python src/features/build_features.py 'data/interim/train.pkl' 'data/processed/train.pkl';
+      python src/features/build_features.py 'data/interim/test.pkl' 'data/processed/test.pkl'
+    deps:
+    - data/interim
+    outs:
+    - data/processed
+  train_stage:
+    cmd: python src/models/train_model.py 'data/processed/train.pkl' 'data/processed/target.pkl'
+      'models/model.pkl' 'reports/score.json'
+    deps:
+    - data/processed/train.pkl
+    outs:
+    - models/
+  predict_stage:
+    cmd: python src/models/predict_model.py 'data/processed/test.pkl' 'models/model.pkl'
+      'data/external/predictions.csv'
+    deps:
+    - data/processed/test.pkl
+    outs:
+    - data/external/
+  visualization_stage:
+    cmd: python src/visualization/visualize.py 'models/model.pkl' 'reports/figures/main.png'
+    deps:
+    - models/
+    metrics:
+    - reports/score.json:
+        cache: false
+    plots:
+    - reports/figures/main.png

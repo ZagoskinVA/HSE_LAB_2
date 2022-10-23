@@ -1,0 +1,67 @@
+schema: '2.0'
+stages:
+  preprocess_data:
+    cmd: python src/data/make_dataset.py 'data/raw/train.csv' 'data/interim/train.pkl'
+      'data/processed/target.pkl'; python src/data/make_dataset.py 'data/raw/test.csv'
+      'data/interim/test.pkl' '.'
+    deps:
+    - path: data/raw
+      md5: c47d880ecc802b703ab8154506d0b094.dir
+      size: 912081
+      nfiles: 3
+    outs:
+    - path: data/interim
+      md5: f3ee0bb79b152fd4f4b36025c45cdc22.dir
+      size: 974178
+      nfiles: 3
+  features_data:
+    cmd: python src/features/build_features.py 'data/interim/train.pkl' 'data/processed/train.pkl';
+      python src/features/build_features.py 'data/interim/test.pkl' 'data/processed/test.pkl'
+    deps:
+    - path: data/interim
+      md5: f3ee0bb79b152fd4f4b36025c45cdc22.dir
+      size: 974178
+      nfiles: 3
+    outs:
+    - path: data/processed
+      md5: 103c5756c17cecd117907551a599d3a9.dir
+      size: 1020810
+      nfiles: 4
+  train_stage:
+    cmd: python src/models/train_model.py 'data/processed/train.pkl' 'data/processed/target.pkl'
+      'models/model.pkl' 'reports/score.json'
+    deps:
+    - path: data/processed/train.pkl
+      md5: 5c9b4ff672734d158eb42760cd6e4048
+      size: 494898
+    outs:
+    - path: models/
+      md5: 0014dd0a1465f660890272b3ddf9a03f.dir
+      size: 202176272
+      nfiles: 2
+  predict_stage:
+    cmd: python src/models/predict_model.py 'data/processed/test.pkl' 'models/model.pkl'
+      'data/external/predictions.csv'
+    deps:
+    - path: data/processed/test.pkl
+      md5: 43862156f7b5fcf44a183de14ce01daa
+      size: 496057
+    outs:
+    - path: data/external/
+      md5: 2a3fb06c8d0ea03862a508cb232a5b93.dir
+      size: 542694
+      nfiles: 2
+  visualization_stage:
+    cmd: python src/visualization/visualize.py 'models/model.pkl' 'reports/figures/main.png'
+    deps:
+    - path: models/
+      md5: 0014dd0a1465f660890272b3ddf9a03f.dir
+      size: 202176272
+      nfiles: 2
+    outs:
+    - path: reports/figures/main.png
+      md5: 4affa4244a1697fbe056dece6074ab99
+      size: 62705
+    - path: reports/score.json
+      md5: 96e930460e25b258384a71e287065849
+      size: 233
